@@ -1,3 +1,11 @@
+"""
+Get the algorithm results as Python variables,
+and convert them to JSON for uploading to the database.
+
+Programmer: Oriya Alperin
+Since: 2023-07
+"""
+
 import sqlite3
 import json
 
@@ -61,7 +69,7 @@ def id2data(database_filename:str, results: dict) -> tuple[dict,dict]:
 
 
 if __name__=="__main__":
-    DATABASE_FILENAME = '../db.sqlite3'
+    DATABASE_FILENAME = '../dbold.sqlite3'
     results = {}
     #agent_capacities, item_capacities, valuations = sqlite2python(DATABASE_FILENAME)
     agent_details, item_details = id2data(DATABASE_FILENAME, results)

@@ -1,3 +1,12 @@
+"""
+Read the lists of courses, students and rankings from the sqlite database,
+and convert them to Python variables.
+
+Programmer: Oriya Alperin
+Since: 2023-07
+"""
+
+
 import sqlite3
 from collections import defaultdict
 
@@ -49,7 +58,7 @@ def sqlite2python(database_filename:str, office_id:str) -> tuple[dict,dict,dict]
     return (agent_capacities, item_capacities, valuations)
 
 if __name__=="__main__":
-    DATABASE_FILENAME = 'dbold.sqlite3'
+    DATABASE_FILENAME = '../dbold.sqlite3'
 
     """
     # uncomment to select a different office"
@@ -57,7 +66,7 @@ if __name__=="__main__":
     print("offices list: (id, name):\n" ,offices)
     office_id = input("enter the required office id: ")
     """
-    
+
     office_id = '1'
     agent_capacities, item_capacities, valuations = sqlite2python(DATABASE_FILENAME,office_id)
 

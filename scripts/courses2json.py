@@ -1,3 +1,12 @@
+"""
+Read a list of courses from a Google Spreadsheet,
+and convert it to a JSON  that can be uploaded to the database.
+
+Programmer: Oriya Alperin
+Since: 2023-07
+"""
+
+
 import gspread
 import json
 
