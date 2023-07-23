@@ -21,8 +21,8 @@ def rankers_list(database_filename:str):
 
 def id2data(database_filename:str, results: dict) -> tuple[dict,dict]:
     """
-    INPUT:   path to an sqlite3 database containing input for course-allocation problem.
-    OUTPUT:  the two input variables: agent_capacities, item_capacities.
+    INPUT:   path to an sqlite3 database containing input for course-allocation problem, and a dict containing the algorithm resutls.
+    OUTPUT:  two output variables: student_details - details of students, including their allocation; course_details - details of courses.
     """
     conn = sqlite3.connect(database_filename)
     cursor = conn.cursor()
@@ -55,17 +55,9 @@ def id2data(database_filename:str, results: dict) -> tuple[dict,dict]:
         course_data = {'id': id, 'course_id' : course_id, 'name': name, 'capacity': capacity}
         course_details.append(course_data)
 
-
-
     conn.close()
-
     return (student_details,course_details)
 
-"""def valuations_detailed(agent_details:dict, item_details: dict, placements: dict) -> dict:
-    student_courses = {}
-    for sudent,courses in placements:
-        
-"""
 
 
 if __name__=="__main__":
