@@ -61,7 +61,8 @@ def id2data(database_filename:str, results: dict) -> tuple[dict,dict]:
 
 
 if __name__=="__main__":
-    DATABASE_FILENAME = '../dbold.sqlite3'
+    import codecs
+    DATABASE_FILENAME = '../db.sqlite3'
     results = {}
     #agent_capacities, item_capacities, valuations = sqlite2python(DATABASE_FILENAME)
     agent_details, item_details = id2data(DATABASE_FILENAME, results)
@@ -69,7 +70,7 @@ if __name__=="__main__":
     print(agent_details)
     print('item_capacities:')
     print(item_details)
-    with open('../files/student_details.json', 'w') as file:
+    with codecs.open('../files/student_details.json', 'w', encoding="utf-8") as file:
         json.dump(agent_details, file, indent=4, ensure_ascii=False)
-    with open('../files/course_details.json', 'w') as file:
+    with codecs.open('../files/course_details.json', 'w', encoding="utf-8") as file:
         json.dump(item_details, file, indent=4, ensure_ascii=False)

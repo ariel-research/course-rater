@@ -58,7 +58,7 @@ def sqlite2python(database_filename:str, office_id:str) -> tuple[dict,dict,dict]
     return (agent_capacities, item_capacities, valuations)
 
 if __name__=="__main__":
-    DATABASE_FILENAME = '../dbold.sqlite3'
+    DATABASE_FILENAME = '../db.sqlite3'
 
     """
     # uncomment to select a different office"

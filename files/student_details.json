@@ -1,310 +1,65 @@
 [
     {
-        "id": 1,
-        "student_id": 205666407,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 4,
-        "student_id": 203777404,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 5,
-        "student_id": 203777405,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 6,
-        "student_id": 203777406,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 7,
-        "student_id": 203777407,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 8,
-        "student_id": 203777408,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 9,
-        "student_id": 203777409,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 10,
-        "student_id": 203777410,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 11,
-        "student_id": 203777411,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 12,
-        "student_id": 203777412,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 13,
-        "student_id": 203777413,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 14,
-        "student_id": 203777414,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 15,
-        "student_id": 203777415,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 16,
-        "student_id": 203777416,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 17,
-        "student_id": 203777417,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 18,
-        "student_id": 203777418,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 19,
-        "student_id": 203777419,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 20,
-        "student_id": 203777420,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 21,
-        "student_id": 203777421,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 22,
-        "student_id": 203777422,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 23,
-        "student_id": 203777423,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 24,
-        "student_id": 203777424,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 25,
-        "student_id": 203777425,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 26,
-        "student_id": 203777426,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 27,
-        "student_id": 203777427,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 28,
-        "student_id": 203777428,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 29,
-        "student_id": 203777429,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 30,
-        "student_id": 203777430,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 31,
-        "student_id": 203777431,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 32,
-        "student_id": 203777432,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 33,
-        "student_id": 203777433,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 34,
-        "student_id": 203777434,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 35,
-        "student_id": 203777435,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 36,
-        "student_id": 203777436,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 37,
-        "student_id": 203777437,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 38,
-        "student_id": 203777438,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 39,
-        "student_id": 203777439,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 40,
-        "student_id": 203777440,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 41,
-        "student_id": 203777401,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 42,
-        "student_id": 203777402,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
-        "id": 43,
-        "student_id": 203777403,
-        "email": "",
-        "first_name": "",
-        "last_name": ""
-    },
-    {
         "id": 52,
         "student_id": 207809443,
         "email": "oriyaalp@ariel.ac.il",
-        "first_name": "�����",
-        "last_name": "������"
+        "first_name": "אוריה",
+        "last_name": "אלפרין"
     },
     {
         "id": 53,
-        "student_id": null,
+        "student_id": 32112492,
         "email": "davidesh@ariel.ac.il",
-        "first_name": "����",
-        "last_name": "���-����"
+        "first_name": "אראל",
+        "last_name": "סגל-הלוי"
     },
     {
-        "id": 59,
-        "student_id": null,
+        "id": 63,
+        "student_id": 28018174,
+        "email": "shapird@g.ariel.ac.il",
+        "first_name": "Dana",
+        "last_name": "Shapira"
+    },
+    {
+        "id": 64,
+        "student_id": 208113381,
+        "email": "mohanad.sfi@msmail.ariel.ac.il",
+        "first_name": "מוהנד",
+        "last_name": "ספי"
+    },
+    {
+        "id": 65,
+        "student_id": 314946831,
         "email": "oriya.alperin@msmail.ariel.ac.il",
-        "first_name": "Oriyar",
-        "last_name": "Alperin"
+        "first_name": "יונתן",
+        "last_name": "אלפרין"
+    },
+    {
+        "id": 66,
+        "student_id": 315407890,
+        "email": "zachi.benshitr@msmail.ariel.ac.il",
+        "first_name": "צחי",
+        "last_name": "בן"
+    },
+    {
+        "id": 67,
+        "student_id": 208957084,
+        "email": "roy.wasker@msmail.ariel.ac.il",
+        "first_name": "רוי",
+        "last_name": "ווסקר"
+    },
+    {
+        "id": 68,
+        "student_id": 213856198,
+        "email": "miriam.nagar@msmail.ariel.ac.il",
+        "first_name": "מרים",
+        "last_name": "נגר"
+    },
+    {
+        "id": 69,
+        "student_id": 323825059,
+        "email": "Shira.Chesler@msmail.ariel.ac.il",
+        "first_name": "שירה",
+        "last_name": "צשלר"
     }
 ]
