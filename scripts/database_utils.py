@@ -5,12 +5,16 @@ import os
 load_dotenv()
 
 class Database:
-    def __init__(self):
+    def __init__(self,
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")):
         self.conn = mysql.connector.connect(
-            host= os.getenv("DB_HOST"),
-            user= os.getenv("DB_USER"),
-            password= os.getenv("DB_PASSWORD"),
-            database= os.getenv("DB_NAME"),
+            host= host,
+            user= user,
+            password= password,
+            database= database
         )
         self.cursor = self.conn.cursor()
 
