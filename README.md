@@ -44,7 +44,7 @@ Creating the First Server Block File For React Frontend
        root /home/username/cap/cap-frontend/build;
        index index.html index.htm;
 
-       server_name your_IP csariel.xyz www.csariel.xyz;
+       server_name your_IP domain.com www.domain.com;
 
         location / {
                 try_files $uri /index.html =404;
@@ -89,21 +89,22 @@ run `sudo nano /etc/systemd/system/gunicorn.service`
 
 > You can find the logs with this command: `sudo journalctl -f -u gunicorn`
 
-#### Run the following commands to enable gunicorn: \
+#### Run the following commands to enable gunicorn:
 `sudo systemctl start gunicorn` \
-`sudo systemctl enable gunicorn` \ 
+`sudo systemctl enable gunicorn` \
 `sudo systemctl status gunicorn` \
 `sudo systemctl daemon-reload` \
-`sudo systemctl restart gunicorn` \
+`sudo systemctl restart gunicorn` 
 
  Now that we have our initial server block configuration, we can use that as a basis for our second file. Copy it over to create a new file:
 `sudo cp /etc/nginx/sites-available/ariel-courses /etc/nginx/sites-available/test`
 
 #### Open the new file with sudo privileges in your editor:
-`sudo nano /etc/nginx/sites-available/test.com`
+`sudo nano /etc/nginx/sites-available/test`
 
 #### Paste the following and be sure update your own IP, username, path and project name
 > This covers http, https will be covered below
+
     server {
         listen 80;
         server_name IP;
@@ -117,7 +118,7 @@ run `sudo nano /etc/systemd/system/gunicorn.service`
         }
     }
 
-Link and test nginx config
+#### Link and test nginx config
 Link: `sudo ln -s /etc/nginx/sites-available/cap-backend/etc/nginx/sites-enabled` \
 Test: `sudo nginx -t`
 
@@ -125,7 +126,7 @@ Test: `sudo nginx -t`
 `sudo systemctl restart gunicorn` \
 `sudo systemctl restart nginx`
 
-#### In order to avoid a possible hash bucket memory problem that can arise from adding additional server names, we will also adjust a single value within our /etc/nginx/nginx.conf file. Open the file now:
+#### In order to avoid a possible hash bucket memory problem that can arise from adding additional server names, we will also adjust a single value within our `/etc/nginx/nginx.conf file`. Open the file now:
 `sudo nano /etc/nginx/nginx.conf`
 
 #### Within the file, find the server_names_hash_bucket_size directive. Remove the # symbol to uncomment the line:
