@@ -1,5 +1,5 @@
 """
-Read the lists of courses, students and rankings from the sqlite database,
+Read the lists of courses, students and rankings from the MySQL database,
 and convert them to Python variables.
 
 Programmer: Oriya Alperin
