@@ -1,38 +1,11 @@
 [
     {
-        "id": 52,
-        "student_id": 207809443,
-        "email": "oriyaalp@ariel.ac.il",
-        "first_name": "אוריה",
-        "last_name": "אלפרין"
-    },
-    {
-        "id": 53,
-        "student_id": 32112492,
-        "email": "davidesh@ariel.ac.il",
-        "first_name": "אראל",
-        "last_name": "סגל-הלוי"
-    },
-    {
-        "id": 63,
-        "student_id": 28018174,
-        "email": "shapird@g.ariel.ac.il",
-        "first_name": "Dana",
-        "last_name": "Shapira"
-    },
-    {
         "id": 64,
         "student_id": 208113381,
         "email": "mohanad.sfi@msmail.ariel.ac.il",
         "first_name": "מוהנד",
-        "last_name": "ספי"
-    },
-    {
-        "id": 65,
-        "student_id": 314946831,
-        "email": "oriya.alperin@msmail.ariel.ac.il",
-        "first_name": "יונתן",
-        "last_name": "אלפרין"
+        "last_name": "ספי",
+        "courses": null
     },
     {
         "id": 66,
@@ -46,20 +19,80 @@
         "student_id": 208957084,
         "email": "roy.wasker@msmail.ariel.ac.il",
         "first_name": "רוי",
-        "last_name": "ווסקר"
+        "last_name": "ווסקר",
+        "courses": null
     },
     {
         "id": 68,
         "student_id": 213856198,
         "email": "miriam.nagar@msmail.ariel.ac.il",
         "first_name": "מרים",
-        "last_name": "נגר"
+        "last_name": "נגר",
+        "courses": null
     },
     {
         "id": 69,
         "student_id": 323825059,
         "email": "Shira.Chesler@msmail.ariel.ac.il",
         "first_name": "שירה",
-        "last_name": "צשלר"
+        "last_name": "צשלר",
+        "courses": null
+    },
+    {
+        "id": 71,
+        "student_id": 312429327,
+        "email": "bar.nahmias@msmail.ariel.ac.il",
+        "first_name": "בר",
+        "last_name": "נחמיאס",
+        "courses": null
+    },
+    {
+        "id": 73,
+        "student_id": 314946831,
+        "email": "oriya.alperin@msmail.ariel.ac.il",
+        "first_name": "יונתן",
+        "last_name": "אלפרין"
+    },
+    {
+        "id": 74,
+        "student_id": 324061399,
+        "email": "daniel.zerkavod@msmail.ariel.ac.il",
+        "first_name": "דניאל",
+        "last_name": "זר כבוד"
+    },
+    {
+        "id": 75,
+        "student_id": 206996381,
+        "email": "Noa.Amichai@msmail.ariel.ac.il",
+        "first_name": "נעה",
+        "last_name": "עמיחי"
+    },
+    {
+        "id": 76,
+        "student_id": 209452093,
+        "email": "orel.dayan@msmail.ariel.ac.il",
+        "first_name": "אוראל",
+        "last_name": "דיין"
+    },
+    {
+        "id": 77,
+        "student_id": 316320282,
+        "email": "batel.cohen9@msmail.ariel.ac.il",
+        "first_name": "בתאל",
+        "last_name": "כהן"
+    },
+    {
+        "id": 78,
+        "student_id": 319096251,
+        "email": "Nitay.Levi@msmail.ariel.ac.il",
+        "first_name": "ניתאי",
+        "last_name": "לוי"
+    },
+    {
+        "id": 79,
+        "student_id": 205802747,
+        "email": "naor.tzadok@msmail.ariel.ac.il",
+        "first_name": "נאור",
+        "last_name": "צדוק"
     }
 ]

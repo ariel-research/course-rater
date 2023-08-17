@@ -11,7 +11,7 @@ import gspread
 import json
 
 def courses_to_json(url: str):
-    account = gspread.service_account("././google-credentials.json")
+    account = gspread.service_account("google-credentials.json")
     # Open spreadsheet by name:
     spreadsheet = account.open_by_url(url)
     # Open sheet by name:
@@ -36,5 +36,5 @@ if __name__ == "__main__":
     courses = courses_to_json(url)
     
     # Save the dictionary as JSON
-    with open('../files/output.json', 'w') as file:
+    with open('files/output.json', 'w') as file:
         json.dump(courses, file, indent=4, ensure_ascii=False)

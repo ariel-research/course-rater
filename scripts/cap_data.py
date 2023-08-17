@@ -23,10 +23,11 @@ from database_utils import Database
 from collections import defaultdict
 import json
 import pandas as pd
-from enum import Enum
 
 class CapData():
-
+    """
+    Connects to database and performs data operations
+    """
     def __init__(self, office_id:str,results=None):
         self.database = Database()
         self.office_id = office_id
@@ -36,8 +37,8 @@ class CapData():
         student_details = {}
         query = f'SELECT api_student.id, student_id, email, first_name, last_name FROM api_student JOIN auth_user ON api_student.user_id = auth_user.id WHERE api_student.office_id={self.office_id}'
         students = self.database.execute_query(query)
-        for id, student_id,email,first_name,last_name in students:
-            student_details[id] = {student_id,email,first_name,last_name}
+        for student_id, student_il_id,email,first_name,last_name in students:
+            student_details[student_id] = {'student_id': student_il_id,'email': email,'first_name': first_name,'last_name': last_name}
         
         return student_details
 
@@ -50,7 +51,7 @@ class CapData():
         query = f'SELECT api_course_group.id, api_course.id, name, sum(capacity) FROM api_course JOIN api_course_group ON api_course.course_group_id = api_course_group.id GROUP BY api_course_group.id,api_course.id WHERE api_course_group.office_id={self.office_id}'
         courses = self.database.execute_query(query)
         for course_group_id, course_id, name, capacity in courses:
-            course_details[course_group_id] = {course_id,name,int(capacity)}
+            course_details[course_group_id] = {'course_id': course_id,'name': name, 'capacity': int(capacity)}
 
         return course_details
 
@@ -59,12 +60,34 @@ class CapData():
         OUTPUT:  course_details - details of courses.
         """
         course_details = {}
-        query = f'SELECT api_course.id, name, capacity FROM api_course JOIN api_course_group ON api_course.course_group_id = api_course_group.id WHERE api_course_group.office_id={self.office_id}'
+        query = f'SELECT api_course.id, api_course.course_id, name, capacity FROM api_course JOIN api_course_group ON api_course.course_group_id = api_course_group.id WHERE api_course_group.office_id={self.office_id}'
         courses = self.database.execute_query(query)
-        for course_id, name, capacity in courses:
-            course_details[course_id] = {name,int(capacity)}
+        for course_id,course_num_id, name, capacity in courses:
+            course_details[course_id] = {'course_id': course_num_id, 'name': name, 'capacity': int(capacity)}
 
         return course_details
+
+    def ranking_list(self) -> dict:
+
+        valuations = defaultdict(dict)
+        query = f'SELECT api_ranking.student_id, course_id, `rank`, is_acceptable FROM api_ranking,api_student \
+                WHERE api_ranking.student_id = api_student.id AND api_student.office_id = {self.office_id}'
+        rankings = self.database.execute_query(query)
+        for student_id, course_id, rank, is_acceptable in rankings:
+            valuations[student_id][course_id] = {"rank": rank, "is_acceptable":bool(is_acceptable)}
+        valuations = dict(valuations)
+        return valuations
+        
+
+    def rankers_list():
+        rankers = []
+        query = f'SELECT DISTINCT student_id FROM api_ranking, api_student \
+        WHERE api_ranking.student_id = api_student.id AND api_student.office_id = {self.office_id}'
+        rankings = self.database.execute_query(query)
+        for student_id, in rankings:
+            rankers.append(student_id)
+        return rankers
+
 
     def course_times_list(self) -> list:
         
@@ -108,12 +131,36 @@ class CapData():
         for i, c1 in enumerate(course_times):
             interval1 = pd.Interval(pd.Timestamp(c1['time_start']), pd.Timestamp(c1['time_end']))
             for j, c2 in enumerate(course_times[i+1:], start=i+1):
-                    if (c1['course_group_id'] == c2['course_group_id'] and c1['course_id'] !=c2['course_id']) or c1['day-sem'] == c2['day-sem'] and interval1.overlaps(pd.Interval(pd.Timestamp(c2['time_start']), pd.Timestamp(c2['time_end']))):
+                    same_course = c1['course_group_id'] == c2['course_group_id'] and c1['course_id'] !=c2['course_id']
+                    is_overlap = interval1.overlaps(pd.Interval(pd.Timestamp(c2['time_start']), pd.Timestamp(c2['time_end'])))
+                    same_time =  c1['day-sem'] == c2['day-sem'] and is_overlap
+                    if same_course or same_time:
                             overlap_courses[c1['course_id']].append(c2['course_id'])
                             overlap_courses[c2['course_id']].append(c1['course_id'])                        
                             #print(f"{c1['course_id']}: {c1['day-sem']}, {c1['time_start']} - {c1['time_end']} VS {c2['course_id']}: {c2['day-sem']}, {c2['time_start']} - {c2['time_end']}")
                 
         return dict(overlap_courses)
+
+    
+    def results_full_info(results: dict) -> tuple[dict,dict]:
+        """
+        INPUT:   a dict containing the algorithm resutls.
+        OUTPUT:  two output variables: student_details - details of students, including their allocation; course_details - details of courses.
+        """
+        rankers = self.rankers_list()
+        students = self.students_list()
+        courses = self.courses_list()        
+        for student_id, student_info in students:
+            if student_id in rankers:
+                try:
+                    student_courses = results.get(student_id)
+                    print("courses: ",student_courses)
+                    students[student_id]['courses']=[course_details[course_id] for course_id in student_courses]
+
+                except Exception as e:
+                    raise Exception(f'The student with id no. {student_info['student_id']} (aka {student_info['first_name']} {student_info['last_name']}) ranked courses, but is not found in courses dictonary')
+
+        return students
 
 
 if __name__=="__main__":
@@ -125,6 +172,8 @@ if __name__=="__main__":
     courses_list = cap_data.courses_list()
     course_times = cap_data.course_times_list()
     overlap_courses = cap_data.overlap_courses()
+    rankings = cap_data.ranking_list()
+    results = cap_data.results_full_info()
     print('students_list:')
     print(students_list)
     print('courses_list:')
@@ -133,4 +182,8 @@ if __name__=="__main__":
     print(overlap_courses)
     print('course times:')
     print(course_times)
+    print('rankings:')
+    print(rankings)
+    print('results:')
+    print()
     cap_data.database.close_connection()
