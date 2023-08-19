@@ -1,5 +1,7 @@
 # course-rater
 
+## Limiting network bandwidth
+To limit the bandwidth with Wondershaper tool, follow [this guide](https://averagelinuxuser.com/limit-bandwidth-linux/).
 
 ## Deploying react and django with nginx and guincorn
 #### The following guide is taken from [here](https://austinogiza.medium.com/deploying-react-and-django-rest-framework-with-nginx-and-gunicorn-7a0553459500), but has been adjusted for our app.
@@ -44,10 +46,24 @@ Creating the First Server Block File For React Frontend
        root /home/username/cap/cap-frontend/build;
        index index.html index.htm;
 
-       server_name your_IP domain.com www.domain.com;
+       server_name your_IP csariel.xyz www.csariel.xyz;
 
         location / {
                 try_files $uri /index.html =404;
+        }
+        location /auth {
+            include proxy_params;
+            proxy_pass http://104.248.16.54:8000/auth;
+            proxy_set_header Authorization $http_authorization;
+        }
+        location /admin {
+            proxy_pass http://104.248.16.54:8000/admin;
+        }
+        location /api {
+            proxy_pass http://104.248.16.54:8000/api;
+        }
+        location /verification {
+            proxy_pass http://104.248.16.54:8000/verification;
         }
     }
 
@@ -84,7 +100,7 @@ run `sudo nano /etc/systemd/system/gunicorn.service`
     User=username
     Group=www-data
     WorkingDirectory=/home/username/cap/cap-backend
-    ExecStart=/home/username/cap/cap-backend/venv/bin/gunicorn --access-logfile - --workers 3  cap.wsgi:application --bind <hostname:backend-port>
+    ExecStart=/home/username/cap/cap-backend/venv/bin/gunicorn --access-logfile - --workers 3  cap.wsgi:application --bind 104.248.16.54:8000
     WantedBy=multi-user.target
 
 > You can find the logs with this command: `sudo journalctl -f -u gunicorn`
@@ -107,19 +123,19 @@ run `sudo nano /etc/systemd/system/gunicorn.service`
 
     server {
         listen 80;
-        server_name IP;
+        server_name 104.248.16.54;
         location = /favicon.ico { access_log off; log_not_found off; }
         location /static/ {
             root /home/username/cap/cap-backend;
         }
         location / {
             include proxy_params;
-            proxy_pass http://<hostname:backend-port>;
+            proxy_pass http://104.248.16.54:8000;
         }
     }
 
 #### Link and test nginx config
-Link: `sudo ln -s /etc/nginx/sites-available/cap-backend/etc/nginx/sites-enabled` \
+Link: `sudo ln -s /etc/nginx/sites-available/cap-backend /etc/nginx/sites-enabled` \
 Test: `sudo nginx -t`
 
 #### Reload Nginx and Gunicorn
@@ -140,3 +156,49 @@ Test: `sudo nginx -t`
         . . .
     }
 
+## Securing the app
+> domain name is needed.
+
+#### Now, let’s activate SSL and bind the domains to their respective proxies.
+#### Install Certbot and it’s Nginx plugin with apt:
+
+`sudo apt install certbot python3-certbot-nginx`
+
+Certbot is now ready to use, but in order for it to automatically configure SSL for Nginx, we need to verify some of Nginx’s configuration.
+
+#### Obtain an SSL Certificate
+First we obtain SSL certificate for the react url
+
+`sudo certbot — nginx -d csariel.xyz -d www.csariel.xyz`
+
+This runs certbot with the --nginx plugin, using -d to specify the domain names we’d like the certificate to be valid for.
+
+If that’s successful, certbot will ask how you’d like to configure your HTTPS settings.
+
+> Output
+
+    Please choose whether or not to redirect HTTP traffic to HTTPS, removing HTTP access.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    1: No redirect - Make no further changes to the webserver configuration.
+    2: Redirect - Make all requests redirect to secure HTTPS access. Choose this for
+    new sites, or if you're confident your site works on HTTPS. You can undo this
+    change by editing your web server's configuration.
+    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Select the appropriate number [1-2] then [enter] (press 'c' to cancel):
+
+Select your choice then hit ENTER. The configuration will be updated, and Nginx will reload to pick up the new settings. certbot will wrap up with a message telling you the process was successful and where your certificates are stored:
+
+Let’s finish by testing the renewal process.
+
+#### Verify Certbot Auto-Renewal
+You can query the status of the timer with systemctl:
+
+`sudo systemctl status certbot.timer`
+
+#### To test the renewal process, you can do a dry run with certbot:
+
+`sudo certbot renew — dry-run`
+
+If you see no errors, you’re all set. When necessary, Certbot will renew your certificates and reload Nginx to pick up the changes. If the automated renewal process ever fails, Let’s Encrypt will send a message to the email you specified, warning you when your certificate is about to expire.
+
+Now, repeat the same SSL process for the django domain
