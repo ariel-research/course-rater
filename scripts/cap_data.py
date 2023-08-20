@@ -1,19 +1,5 @@
 """
-Get the algorithm results as Python variables,
-and convert them to JSON for uploading to the database.
-
-Note:
-    Please be aware that MySQL has a list of reserved words that have special meanings.
-
-    If you encounter this error:
-    mysql.connector.errors.ProgrammingError
-    1064 (42000): You have an error in your SQL syntax;
-
-    it may be due to using a reserved word in your SQL query.
-    To troubleshoot, check the list of MySQL reserved words:
-    https://en.wikipedia.org/wiki/List_of_SQL_reserved_words
-
-    To use a reserved word, wrap it with backticks (` `) in your SQL query.
+???
 
 Programmer: Oriya Alperin
 Since: 2023-07
@@ -26,60 +12,68 @@ import pandas as pd
 
 class CapData():
     """
-    Connects to database and performs data operations
+    Connects to the CAP database, performs data operations,
+    and retrieves data associated with the given office_id.
     """
     def __init__(self, office_id:str,results=None):
         self.database = Database()
         self.office_id = office_id
         self.results = results
-        
+
+    
     def students_list(self) -> dict:
+        """
+        OUTPUT:  student_details - details of students.
+        """
         student_details = {}
-        query = f'SELECT api_student.id, student_id, email, first_name, last_name FROM api_student JOIN auth_user ON api_student.user_id = auth_user.id WHERE api_student.office_id={self.office_id}'
+        query = f'SELECT api_student.id, student_id, email, first_name, last_name, amount_elective, program FROM api_student JOIN auth_user ON api_student.user_id = auth_user.id WHERE api_student.office_id={self.office_id}'
         students = self.database.execute_query(query)
-        for student_id, student_il_id,email,first_name,last_name in students:
-            student_details[student_id] = {'student_id': student_il_id,'email': email,'first_name': first_name,'last_name': last_name}
-        
+        for student_id, student_il_id,email,first_name,last_name,amount_elective, program in students:
+            student_details[student_id] = {'student_id': student_il_id,'email': email,'first_name': first_name,'last_name': last_name, 'amount_elective':amount_elective, 'program': program}
         return student_details
 
 
     def course_group_list(self) -> dict:
         """
-        OUTPUT:  course_details - details of group courses.
+        OUTPUT: course_details - details of group courses.
         """
         course_details = {}
         query = f'SELECT api_course_group.id, api_course.id, name, sum(capacity) FROM api_course JOIN api_course_group ON api_course.course_group_id = api_course_group.id GROUP BY api_course_group.id,api_course.id WHERE api_course_group.office_id={self.office_id}'
         courses = self.database.execute_query(query)
         for course_group_id, course_id, name, capacity in courses:
             course_details[course_group_id] = {'course_id': course_id,'name': name, 'capacity': int(capacity)}
-
         return course_details
 
     def courses_list(self) -> dict:
         """
-        OUTPUT:  course_details - details of courses.
+        OUTPUT: course_details - details of group courses.
         """
         course_details = {}
         query = f'SELECT api_course.id, api_course.course_id, name, capacity FROM api_course JOIN api_course_group ON api_course.course_group_id = api_course_group.id WHERE api_course_group.office_id={self.office_id}'
         courses = self.database.execute_query(query)
         for course_id,course_num_id, name, capacity in courses:
             course_details[course_id] = {'course_id': course_num_id, 'name': name, 'capacity': int(capacity)}
-
         return course_details
 
     def ranking_list(self) -> dict:
-
-        valuations = defaultdict(dict)
+        """
+        OUTPUT: studnt_rankings dictionary in this format: [student_id][course_id] contains
+                the details of the student's course ranking
+        """
+        stuednt_rankings = defaultdict(dict)
         query = f'SELECT api_ranking.student_id, course_id, `rank`, is_acceptable FROM api_ranking,api_student \
                 WHERE api_ranking.student_id = api_student.id AND api_student.office_id = {self.office_id}'
         rankings = self.database.execute_query(query)
         for student_id, course_id, rank, is_acceptable in rankings:
-            valuations[student_id][course_id] = {"rank": rank, "is_acceptable":bool(is_acceptable)}
-        valuations = dict(valuations)
-        return valuations
+            stuednt_rankings[student_id][course_id] = {"rank": rank, "is_acceptable":bool(is_acceptable)}
+        stuednt_rankings = dict(stuednt_rankings)
+        return stuednt_rankings
         
 
-    def rankers_list():
+    def rankers_list(self):
+        """
+        OUTPUT: rankers list that contains all students id of students that rank courses 
+        """
         rankers = []
         query = f'SELECT DISTINCT student_id FROM api_ranking, api_student \
         WHERE api_ranking.student_id = api_student.id AND api_student.office_id = {self.office_id}'
@@ -90,10 +84,15 @@ class CapData():
 
 
     def course_times_list(self) -> list:
-        
+        """
+        OUTPUT: course_times - details of time courses.
+        """
         course_times = []
 
         def add_course_times(queries: list):
+            """
+            for each query, get time data and add it to course_times list.
+            """
             for query in queries:
                 courses = self.database.execute_query(query)
                 for course_id,time_start,time_end,day,semester,course_group_id in courses:
@@ -142,7 +141,7 @@ class CapData():
         return dict(overlap_courses)
 
     
-    def results_full_info(results: dict) -> tuple[dict,dict]:
+    def results_full_info(self, results: dict) -> tuple[dict,dict]:
         """
         INPUT:   a dict containing the algorithm resutls.
         OUTPUT:  two output variables: student_details - details of students, including their allocation; course_details - details of courses.
@@ -156,10 +155,12 @@ class CapData():
                     student_courses = results.get(student_id)
                     print("courses: ",student_courses)
                     students[student_id]['courses']=[course_details[course_id] for course_id in student_courses]
-
                 except Exception as e:
-                    raise Exception(f'The student with id no. {student_info['student_id']} (aka {student_info['first_name']} {student_info['last_name']}) ranked courses, but is not found in courses dictonary')
-
+                    student_id = student_info['student_id']
+                    student_name = student_info['first_name'] + " " + student_info['last_name']
+                    raise Exception(
+                        f'The student with id no. {student_id}, aka {student_name}, ranked courses, but is not found in courses dictonary'
+                    )
         return students
 
 
@@ -167,23 +168,24 @@ if __name__=="__main__":
     import codecs
     office_id = '1'
     cap_data = CapData(office_id)
+    results = {}
     #agent_capacities, item_capacities, valuations = mysql2python()
     students_list = cap_data.students_list()
     courses_list = cap_data.courses_list()
     course_times = cap_data.course_times_list()
     overlap_courses = cap_data.overlap_courses()
     rankings = cap_data.ranking_list()
-    results = cap_data.results_full_info()
-    print('students_list:')
+    #results = cap_data.results_full_info(results)
+    print('\nstudents_list:')
     print(students_list)
-    print('courses_list:')
+    print('\ncourses_list:')
     print(courses_list)
-    print('overlap courses:')
+    print('\noverlap courses:')
     print(overlap_courses)
-    print('course times:')
+    print('\ncourse times:')
     print(course_times)
-    print('rankings:')
+    print('\nrankings:')
     print(rankings)
-    print('results:')
-    print()
+    #print('results:')
+    #print()
     cap_data.database.close_connection()

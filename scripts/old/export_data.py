@@ -1,19 +1,5 @@
 """
-Get the algorithm results as Python variables,
-and convert them to JSON for uploading to the database.
-
-Note:
-    Please be aware that MySQL has a list of reserved words that have special meanings.
-
-    If you encounter this error:
-    mysql.connector.errors.ProgrammingError
-    1064 (42000): You have an error in your SQL syntax;
-
-    it may be due to using a reserved word in your SQL query.
-    To troubleshoot, check the list of MySQL reserved words:
-    https://en.wikipedia.org/wiki/List_of_SQL_reserved_words
-
-    To use a reserved word, wrap it with backticks (` `) in your SQL query.
+???
 
 Programmer: Oriya Alperin
 Since: 2023-07
