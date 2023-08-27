@@ -9,6 +9,10 @@ To verify that it works, run:
 
 If you see "active (exited)", it is fine.
 
+To check or change the configuration, run:
+
+    sudo nano /etc/systemd/wondershaper.conf
+
 
 ## Exporting & Importing database
 #### 1. Save the database to a JSON file:
