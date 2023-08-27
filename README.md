@@ -3,6 +3,13 @@
 ## Limiting network bandwidth
 To limit the bandwidth with Wondershaper tool, follow [this guide](https://averagelinuxuser.com/limit-bandwidth-linux/).
 
+To verify that it works, run:
+
+    service wondershaper status
+
+If you see "active (exited)", it is fine.
+
+
 ## Exporting & Importing database
 #### 1. Save the database to a JSON file:
 `python manage.py dumpdata > datadump.json`
