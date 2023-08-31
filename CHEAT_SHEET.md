@@ -15,3 +15,10 @@
 ### Gunicorn 
 #### log file
 - `sudo journalctl -f -u gunicorn`
+
+### Wondershaper
+#### configuration file
+- view and modify limitation settings: `sudo nano /etc/systemd/wondershaper.conf`
+
+#### service management
+- service file: `sudo nano /etc/systemd/system/wondershaper.service`
