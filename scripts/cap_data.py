@@ -38,7 +38,7 @@ class CapData():
         OUTPUT: course_details - details of group courses.
         """
         course_details = {}
-        query = f'SELECT api_course_group.id, api_course.id, name, sum(capacity) FROM api_course JOIN api_course_group ON api_course.course_group_id = api_course_group.id GROUP BY api_course_group.id,api_course.id WHERE api_course_group.office_id={self.office_id}'
+        query = f'SELECT api_course_group.id, api_course.id, name, sum(capacity) FROM api_course JOIN api_course_group ON api_course.course_group_id = api_course_group.id WHERE api_course_group.office_id={self.office_id} GROUP BY api_course_group.id,api_course.id'
         courses = self.database.execute_query(query)
         for course_group_id, course_id, name, capacity in courses:
             course_details[course_group_id] = {'course_id': course_id,'name': name, 'capacity': int(capacity)}
@@ -114,7 +114,6 @@ class CapData():
 
         add_course_times(queries)
         course_times.sort(key=lambda course : course['course_id'])    
-
         return course_times
         
 
@@ -140,10 +139,81 @@ class CapData():
                 
         return dict(overlap_courses)
 
+
+    def course_title_list(self) -> dict:
+        """
+        OUTPUT: a dictionary where the keys represent course ids,
+        and the corresponding values are the course titles.
+        """
+        courses_group_list = self.course_group_list()
+        course_times = self.course_times_list()
+        courses_list = self.courses_list()
+        # print("courses_list",courses_list)
+
+        from collections import Counter
+        counter = Counter([course['name'] for course in courses_list.values()])
+        # print(counter)
+
+        def time_hm(time: str) -> str:
+            """
+            INPUT: time string in HH:MM:SS format
+            OUTPUT: time string in HH:MM format
+            """
+            return time.rsplit(':',1)[0]
+
+        def title(course_time):
+            """
+            INPUT: course_time - course details, including their times 
+            OUTPUT: generated course title 
+            """
+            course_group_id = course_time['course_group_id']
+            name = courses_group_list[course_group_id]['name']
+            if counter[name]==1:
+                return name
+            else:
+                day,sem = course_time['day-sem']
+                time = time_hm(course_time['time_start'])# + " - "+ time_hm(course_time['time_end'])
+                return f"{name} ביום {day} {time}"
+
+        return {course_time['course_id']: title(course_time) for course_time in course_times}
+
+
+    def input_for_fair_allocation_algorithm(self) -> tuple[dict,dict,dict,dict,dict]:
+        students_list = self.students_list()
+        courses_list = self.courses_list()
+        course_times = self.course_times_list()
+        overlap_courses = self.overlap_courses()
+        rankings = self.ranking_list()
+        titles = self.course_title_list()
+
+        def sid(student_num):
+            return students_list[student_num]["student_id"]
+
+        def cid(course_num):
+            # return courses_list[course_num]["name"]
+            return titles[course_num]
+
+        valuations = defaultdict(dict)
+        agent_conflicts = defaultdict(set)
+        for student_num, student_values in rankings.items():
+            for course_num, student_course_values in student_values.items():
+                valuations[sid(student_num)][cid(course_num)] = student_course_values["rank"]
+                if not student_course_values["is_acceptable"]:
+                    agent_conflicts[sid(student_num)].add(cid(course_num))
+
+        agent_capacities = {sid(student_num): student_details["amount_elective"] for student_num,student_details in students_list.items()
+            if student_num in rankings}
+        item_capacities  = {cid(course_num): course_details["capacity"] for course_num,course_details in courses_list.items()}
+
+        item_conflicts = {
+            cid(course_num):  {cid(conflicted_course_num) for conflicted_course_num in conflicted_courses}
+            for course_num, conflicted_courses in overlap_courses.items()
+        }
+        return (dict(valuations), agent_capacities, item_capacities, dict(agent_conflicts), item_conflicts)
+
     
     def results_full_info(self, results: dict) -> tuple[dict,dict]:
         """
-        INPUT:   a dict containing the algorithm resutls.
         OUTPUT:  two output variables: student_details - details of students, including their allocation; course_details - details of courses.
         """
         rankers = self.rankers_list()
@@ -163,29 +233,31 @@ class CapData():
                     )
         return students
 
-
 if __name__=="__main__":
     import codecs
     office_id = '1'
     cap_data = CapData(office_id)
     results = {}
-    #agent_capacities, item_capacities, valuations = mysql2python()
+
     students_list = cap_data.students_list()
     courses_list = cap_data.courses_list()
     course_times = cap_data.course_times_list()
     overlap_courses = cap_data.overlap_courses()
     rankings = cap_data.ranking_list()
-    #results = cap_data.results_full_info(results)
-    print('\nstudents_list:')
-    print(students_list)
-    print('\ncourses_list:')
-    print(courses_list)
-    print('\noverlap courses:')
-    print(overlap_courses)
-    print('\ncourse times:')
-    print(course_times)
-    print('\nrankings:')
-    print(rankings)
-    #print('results:')
-    #print()
+    course_titles = cap_data.course_title_list()
+    # #results = cap_data.results_full_info(results)
+    # print('\nstudents_list:', students_list)
+    # print('\ncourses_list:', courses_list)
+    # print('\noverlap courses:', overlap_courses)
+    # print('\ncourse times:', course_times)
+    # print('\nrankings:', rankings)
+    # print('\ncourse_titles:', course_titles)
+
+    (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts) = cap_data.input_for_fair_allocation_algorithm()
+    print ("\n valuations = ", valuations)
+    print ("\n agent_capacities = ", agent_capacities)
+    print ("\n item_capacities = ", item_capacities)
+    print ("\n agent_conflicts = ", agent_conflicts)
+    print ("\n item_conflicts = ", item_conflicts)
+
     cap_data.database.close_connection()
