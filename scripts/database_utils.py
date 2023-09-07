@@ -20,7 +20,11 @@ class Database:
 
     def execute_query(self, query, params=None):
         self.cursor.execute(query, params)
-        return self.cursor.fetchall()
+        if self.cursor.description is not None: # SELECT query
+            return self.cursor.fetchall()
+        self.conn.commit()
+        return self.cursor.rowcount
+        
 
     # Other methods for different database operations
 

@@ -1,9 +1,16 @@
-from cap_data import CapData  
+from cap_data import CapData
 import fairpy.courses as crs
+import json
+import logging
 
-def instance(office_id=1,total_seats_allocated=1115):
-    cap_data = CapData(office_id)
-    (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts) = cap_data.input_for_fair_allocation_algorithm()
+def courses_txt_readable(courses_list:list[str]) -> str :
+    text = str()
+    for index,course_str in enumerate(courses_list):
+        text += f"{index+1}. {course_str} \n"
+    return text
+
+def instance(cap_data:CapData,total_seats_allocated=1115):
+    (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts, course_titles) = cap_data.input_for_fair_allocation_algorithm()
     instance = crs.Instance.random_sample(
     max_num_of_agents = total_seats_allocated, 
     max_total_agent_capacity = total_seats_allocated,
@@ -54,8 +61,8 @@ def run_algorithm(instance):
     files_explanation_logger = crs.FilesExplanationLogger({
         agent: f"../files/explanations/{agent}.log"
         for agent in instance.agents
-    }, mode='w', encoding="utf-8")
-
+    },language='he', mode='w', encoding="utf-8")
+    
     allocation = crs.divide(algorithm=algorithm, instance=instance, explanation_logger=files_explanation_logger)
 
     import json
@@ -70,6 +77,24 @@ def run_algorithm(instance):
     # print("\nExplanations:\n", string_explanation_logger.map_agent_to_explanation())
 
 if __name__ == '__main__':
-    instance = instance()
+    cap_data = CapData()
+    instance = instance(cap_data)
     # matrix = experiment(instance)
     run_algorithm(instance)
+    with open('../files/allocation.json', "r") as file:
+                results = file.read()
+                student_results = dict(json.loads(results))
+                for student_il_id, courses in student_results.items():
+                    if student_il_id.startswith("random"):
+                        continue
+                    with open(f'../files/explanations/{student_il_id}.log', "r") as file:
+                        explantion = file.read()
+                        student_id = cap_data.get_student_id(student_il_id)
+                        row_count = cap_data.update_student_results(
+                             student_id,courses_txt_readable(courses),explantion
+                            )
+                        logging.debug(f"{row_count} row/s affected")
+                        logging.info(f"{student_id}: \n \
+                                    courses_list: {courses} \n \
+                                    explanation: {explantion} \n")
+    cap_data.close_mysql_connection()

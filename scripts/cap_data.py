@@ -15,22 +15,40 @@ class CapData():
     Connects to the CAP database, performs data operations,
     and retrieves data associated with the given office_id.
     """
-    def __init__(self, office_id:str,results=None):
+    def __init__(self, office_id:str=1,results=None):
         self.database = Database()
         self.office_id = office_id
         self.results = results
-
+    
+    def close_mysql_connection(self):
+        self.database.close_connection()
     
     def students_list(self) -> dict:
         """
         OUTPUT:  student_details - details of students.
         """
+        #if self.students:
+        #    return self.students
+
         student_details = {}
+        self.students_by_il_id = {}
         query = f'SELECT api_student.id, student_id, email, first_name, last_name, amount_elective, program FROM api_student JOIN auth_user ON api_student.user_id = auth_user.id WHERE api_student.office_id={self.office_id}'
         students = self.database.execute_query(query)
         for student_id, student_il_id,email,first_name,last_name,amount_elective, program in students:
             student_details[student_id] = {'student_id': student_il_id,'email': email,'first_name': first_name,'last_name': last_name, 'amount_elective':amount_elective, 'program': program}
+            self.students_by_il_id[str(student_il_id)] = str(student_id)
+        
+        
+
+        # svaing calls:
+        self.students = student_details
         return student_details
+
+    def get_student_id(self,student_il_id: str) -> str:
+        if not hasattr(self,'students_by_il_id'):
+            self.students_list()
+        print(self.students_by_il_id)
+        return self.students_by_il_id[student_il_id]
 
 
     def course_group_list(self) -> dict:
@@ -209,7 +227,7 @@ class CapData():
             cid(course_num):  {cid(conflicted_course_num) for conflicted_course_num in conflicted_courses}
             for course_num, conflicted_courses in overlap_courses.items()
         }
-        return (dict(valuations), agent_capacities, item_capacities, dict(agent_conflicts), item_conflicts)
+        return (dict(valuations), agent_capacities, item_capacities, dict(agent_conflicts), item_conflicts, titles)
 
     
     def results_full_info(self, results: dict) -> tuple[dict,dict]:
@@ -232,6 +250,21 @@ class CapData():
                         f'The student with id no. {student_id}, aka {student_name}, ranked courses, but is not found in courses dictonary'
                     )
         return students
+    
+
+    def update_student_results(self,student_id: str,courses_txt: str ,explanation:str ):
+        #query = f"INSERT INTO api_result_info (student_id, courses_txt, explanation) \
+        #      VALUES (%s, %s, %s);"
+        query = "INSERT INTO api_result_info (student_id, courses_txt, explanation) " \
+                "VALUES (%s, %s, %s) " \
+                "ON DUPLICATE KEY UPDATE " \
+                "courses_txt = VALUES(courses_txt), explanation = VALUES(explanation)"
+
+        try:
+            values = (student_id, courses_txt, explanation)
+            return self.database.execute_query(query,values)
+        except Exception as e:
+            raise explanation("Error: failed to insert student result")
 
 if __name__=="__main__":
     import codecs
@@ -253,11 +286,11 @@ if __name__=="__main__":
     # print('\nrankings:', rankings)
     # print('\ncourse_titles:', course_titles)
 
-    (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts) = cap_data.input_for_fair_allocation_algorithm()
+    (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts,titles) = cap_data.input_for_fair_allocation_algorithm()
     print ("\n valuations = ", valuations)
     print ("\n agent_capacities = ", agent_capacities)
     print ("\n item_capacities = ", item_capacities)
     print ("\n agent_conflicts = ", agent_conflicts)
     print ("\n item_conflicts = ", item_conflicts)
 
-    cap_data.database.close_connection()
+    cap_data.close_mysql_connection()
