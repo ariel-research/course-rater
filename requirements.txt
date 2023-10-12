@@ -4,3 +4,4 @@ gspread
 pandas
 fairpy @ git+https://github.com/erelsgl/fairpy.git
 experiments-csv[plotting]
+unidecode
