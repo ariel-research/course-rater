@@ -9,6 +9,7 @@ from database_utils import Database
 from collections import defaultdict
 import json
 import pandas as pd
+from unidecode import unidecode
 
 class CapData():
     """
@@ -45,6 +46,10 @@ class CapData():
         return student_details
 
     def get_student_id(self,student_il_id: str) -> str:
+        """
+        INPUT: student Israeli id.
+        OUTPUT: the corresponding student entity id.
+        """
         if not hasattr(self,'students_by_il_id'):
             self.students_list()
         print(self.students_by_il_id)
@@ -196,7 +201,7 @@ class CapData():
         return {course_time['course_id']: title(course_time) for course_time in course_times}
 
 
-    def input_for_fair_allocation_algorithm(self) -> tuple[dict,dict,dict,dict,dict]:
+    def input_for_fair_allocation_algorithm(self, transliterate_hebrew=False, hide_studentid=False) -> tuple[dict,dict,dict,dict,dict]:
         students_list = self.students_list()
         courses_list = self.courses_list()
         course_times = self.course_times_list()
@@ -205,11 +210,17 @@ class CapData():
         titles = self.course_title_list()
 
         def sid(student_num):
-            return students_list[student_num]["student_id"]
+            if hide_studentid:
+                return f"s{student_num}"
+            else:
+                return students_list[student_num]["student_id"]
 
         def cid(course_num):
             # return courses_list[course_num]["name"]
-            return titles[course_num]
+            course_title = titles[course_num]
+            if transliterate_hebrew:
+                course_title = unidecode(course_title)
+            return course_title
 
         valuations = defaultdict(dict)
         agent_conflicts = defaultdict(set)
@@ -232,7 +243,8 @@ class CapData():
     
     def results_full_info(self, results: dict) -> tuple[dict,dict]:
         """
-        OUTPUT:  two output variables: student_details - details of students, including their allocation; course_details - details of courses.
+        OUTPUT:  two output variables: student_details - details of students, including their allocation;
+                 course_details - details of courses.
         """
         rankers = self.rankers_list()
         students = self.students_list()
@@ -253,8 +265,12 @@ class CapData():
     
 
     def update_student_results(self,student_id: str,courses_txt: str ,explanation:str ):
-        #query = f"INSERT INTO api_result_info (student_id, courses_txt, explanation) \
-        #      VALUES (%s, %s, %s);"
+        """
+        INPUT: student entity ID, text containing algorithm-generated course results,
+               and an explanation of the algorithm's iterations.
+        OUTPUT: Number of affected rows resulting from the insertion/update of student result info in MySQL database.
+        """
+
         query = "INSERT INTO api_result_info (student_id, courses_txt, explanation) " \
                 "VALUES (%s, %s, %s) " \
                 "ON DUPLICATE KEY UPDATE " \
@@ -264,7 +280,19 @@ class CapData():
             values = (student_id, courses_txt, explanation)
             return self.database.execute_query(query,values)
         except Exception as e:
-            raise explanation("Error: failed to insert student result")
+            raise explanation("Error: failed to insert/update student result info")
+
+    def write_input_to_json(self, filename:str):
+        input = { }
+        # input_tuple = cap_data.input_for_fair_allocation_algorithm()
+        (input["valuations"], input["agent_capacities"], input["item_capacities"], input["agent_conflicts"], input["item_conflicts"], _) = self.input_for_fair_allocation_algorithm(transliterate_hebrew=True, hide_studentid=True)
+        for agent in input["agent_conflicts"].keys():
+            input["agent_conflicts"][agent] = list(input["agent_conflicts"][agent])
+        for item in input["item_conflicts"].keys():
+            input["item_conflicts"][item] = list(input["item_conflicts"][item])
+        with open(filename, "w", encoding="utf-8") as file:
+            json.dump(input, file)
+
 
 if __name__=="__main__":
     import codecs
