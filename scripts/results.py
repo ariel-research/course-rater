@@ -1,9 +1,14 @@
+#!python3
 from cap_data import CapData
 import fairpy.courses as crs
 import json
 import logging
 
 def courses_txt_readable(courses_list:list[str]) -> str :
+    """
+    INPUT: list of courses, where each course type is a string.
+    OUTPUT: The courses listed and numbered, separated by lines, returned as text.
+    """
     text = str()
     for index,course_str in enumerate(courses_list):
         text += f"{index+1}. {course_str} \n"
@@ -12,13 +17,13 @@ def courses_txt_readable(courses_list:list[str]) -> str :
 def instance(cap_data:CapData,total_seats_allocated=1115):
     (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts, course_titles) = cap_data.input_for_fair_allocation_algorithm()
     instance = crs.Instance.random_sample(
-    max_num_of_agents = total_seats_allocated, 
-    max_total_agent_capacity = total_seats_allocated,
-    prototype_agent_conflicts=agent_conflicts,
-    prototype_agent_capacities=agent_capacities, 
-    prototype_valuations=valuations,
-    item_capacities=item_capacities,
-    item_conflicts=item_conflicts)
+        max_num_of_agents = total_seats_allocated, 
+        max_total_agent_capacity = total_seats_allocated,
+        prototype_agent_conflicts=agent_conflicts,
+        prototype_agent_capacities=agent_capacities, 
+        prototype_valuations=valuations,
+        item_capacities=item_capacities,
+        item_conflicts=item_conflicts)
     return instance
 
 def experiment(instance):
@@ -55,7 +60,7 @@ def experiment_random():
     return experiment(random_instance)
 
 
-def run_algorithm(instance):
+def run_algorithm(instance, allocation_file):
     algorithm = crs.iterated_maximum_matching_adjusted
     string_explanation_logger = crs.StringsExplanationLogger(instance.agents)
     files_explanation_logger = crs.FilesExplanationLogger({
@@ -66,7 +71,7 @@ def run_algorithm(instance):
     allocation = crs.divide(algorithm=algorithm, instance=instance, explanation_logger=files_explanation_logger)
 
     import json
-    with open("../files/allocation.json", "w", encoding="utf-8") as outfile:
+    with open(allocation_file, "w", encoding="utf-8") as outfile:
         outfile.write(json.dumps(allocation, indent=4, ensure_ascii=False))
 
     matrix:crs.AgentBundleValueMatrix = crs.AgentBundleValueMatrix(instance, allocation)
@@ -78,10 +83,20 @@ def run_algorithm(instance):
 
 if __name__ == '__main__':
     cap_data = CapData()
+    cap_data.write_input_to_json( '../files/input.json')
+
+    import sys
+    sys.exit()
+
+    # Compute the output:
+
     instance = instance(cap_data)
     # matrix = experiment(instance)
-    run_algorithm(instance)
-    with open('../files/allocation.json', "r") as file:
+    
+    allocation_file = '../files/allocation.json'
+    run_algorithm(instance, allocation_file)
+
+    with open(allocation_file, "r") as file:
                 results = file.read()
                 student_results = dict(json.loads(results))
                 for student_il_id, courses in student_results.items():
