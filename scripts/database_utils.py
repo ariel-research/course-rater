@@ -10,6 +10,10 @@ class Database:
                 user=os.getenv("DB_USER"),
                 password=os.getenv("DB_PASSWORD"),
                 database=os.getenv("DB_NAME")):
+        """
+        Establishes a database connection using the provided parameters.
+        The connection and cursor will be accessible as 'conn' and 'cursor,' respectively.
+        """
         self.conn = mysql.connector.connect(
             host= host,
             user= user,
@@ -19,15 +23,19 @@ class Database:
         self.cursor = self.conn.cursor()
 
     def execute_query(self, query, params=None):
+        """
+        Executes select or insert query.
+        Returns the selected data or the row affected count.
+        """
         self.cursor.execute(query, params)
         if self.cursor.description is not None: # SELECT query
             return self.cursor.fetchall()
         self.conn.commit()
         return self.cursor.rowcount
         
-
-    # Other methods for different database operations
-
     def close_connection(self):
+        """
+        Closes the database connection.
+        """
         self.cursor.close()
         self.conn.close()
