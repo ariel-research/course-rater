@@ -1,5 +1,6 @@
 """
-???
+Connect to the CAP database, perform data operations,
+and retrieve data associated with the given office_id.
 
 Programmer: Oriya Alperin
 Since: 2023-07
@@ -10,6 +11,9 @@ from collections import defaultdict
 import json
 import pandas as pd
 from unidecode import unidecode
+
+import logging
+logger = logging.getLogger(__name__)
 
 class CapData():
     """
@@ -24,7 +28,7 @@ class CapData():
     def close_mysql_connection(self):
         self.database.close_connection()
     
-    def students_list(self) -> dict:
+    def students_list(self, condition:str="1") -> dict:
         """
         OUTPUT:  student_details - details of students.
         """
@@ -33,13 +37,17 @@ class CapData():
 
         student_details = {}
         self.students_by_il_id = {}
-        query = f'SELECT api_student.id, student_id, email, first_name, last_name, amount_elective, program FROM api_student JOIN auth_user ON api_student.user_id = auth_user.id WHERE api_student.office_id={self.office_id}'
+        query = f"""
+            SELECT api_student.id, student_id, email, first_name, last_name, amount_elective, program, date_joined, last_login
+            FROM api_student 
+            JOIN auth_user ON api_student.user_id = auth_user.id 
+            WHERE api_student.office_id={self.office_id}
+            AND {condition}
+            """
         students = self.database.execute_query(query)
-        for student_id, student_il_id,email,first_name,last_name,amount_elective, program in students:
-            student_details[student_id] = {'student_id': student_il_id,'email': email,'first_name': first_name,'last_name': last_name, 'amount_elective':amount_elective, 'program': program}
+        for student_id, student_il_id,email,first_name,last_name,amount_elective, program,date_joined,last_login in students:
+            student_details[student_id] = {'student_id': student_il_id,'email': email,'first_name': first_name,'last_name': last_name, 'amount_elective':amount_elective, 'program': program, 'date_joined': date_joined, 'last_login': last_login}
             self.students_by_il_id[str(student_il_id)] = str(student_id)
-        
-        
 
         # svaing calls:
         self.students = student_details
@@ -52,7 +60,7 @@ class CapData():
         """
         if not hasattr(self,'students_by_il_id'):
             self.students_list()
-        print(self.students_by_il_id)
+        # print(self.students_by_il_id)
         return self.students_by_il_id[student_il_id]
 
 
@@ -84,8 +92,12 @@ class CapData():
                 the details of the student's course ranking
         """
         stuednt_rankings = defaultdict(dict)
-        query = f'SELECT api_ranking.student_id, course_id, `rank`, is_acceptable FROM api_ranking,api_student \
-                WHERE api_ranking.student_id = api_student.id AND api_student.office_id = {self.office_id}'
+        query = f"""
+            SELECT api_ranking.student_id, course_id, `rank`, is_acceptable 
+            FROM api_ranking,api_student 
+            WHERE api_ranking.student_id = api_student.id 
+            AND api_student.office_id = {self.office_id}
+            """
         rankings = self.database.execute_query(query)
         for student_id, course_id, rank, is_acceptable in rankings:
             stuednt_rankings[student_id][course_id] = {"rank": rank, "is_acceptable":bool(is_acceptable)}
@@ -202,12 +214,16 @@ class CapData():
 
 
     def input_for_fair_allocation_algorithm(self, transliterate_hebrew=False, hide_studentid=False) -> tuple[dict,dict,dict,dict,dict]:
-        students_list = self.students_list()
+        students_list = self.students_list() # "date_joined > '2024-01-01'")
+        print("\nNum students: ", len(students_list))
+        # for k,d in students_list.items():
+        #     print("   "+d["first_name"]+"-"+d["last_name"]+"-"+d["email"]+" "+str(d["date_joined"])+" "+str(d["last_login"]))
+
         courses_list = self.courses_list()
         course_times = self.course_times_list()
         overlap_courses = self.overlap_courses()
         rankings = self.ranking_list()
-        titles = self.course_title_list()
+        course_titles = self.course_title_list()
 
         def sid(student_num):
             if hide_studentid:
@@ -216,19 +232,32 @@ class CapData():
                 return students_list[student_num]["student_id"]
 
         def cid(course_num):
-            # return courses_list[course_num]["name"]
-            course_title = titles[course_num]
+            course_title = course_titles[course_num]
             if transliterate_hebrew:
                 course_title = unidecode(course_title)
             return course_title
 
         valuations = defaultdict(dict)
         agent_conflicts = defaultdict(set)
-        for student_num, student_values in rankings.items():
-            for course_num, student_course_values in student_values.items():
-                valuations[sid(student_num)][cid(course_num)] = student_course_values["rank"]
-                if not student_course_values["is_acceptable"]:
-                    agent_conflicts[sid(student_num)].add(cid(course_num))
+        for student_num,student_details in students_list.items():
+        # for student_num, student_values in rankings.items():
+            student_id = student_details["student_id"]
+            if student_num in rankings:
+                student_values = rankings[student_num]
+                for course_num, student_course_values in student_values.items():
+                    if course_num not in course_titles:
+                        logger.warn(f"Course num {course_num} is in the ranking of student num {student_num} with id {student_id}, but not in the list of course titles.")
+                        continue
+                    valuations[sid(student_num)][cid(course_num)] = student_course_values["rank"]
+                    if not student_course_values["is_acceptable"]:
+                        agent_conflicts[sid(student_num)].add(cid(course_num))
+                # print(f"There are rankings for student {student_details}!")
+            else:
+                # print(f"No rankings for student {student_details}!")
+                pass
+
+        print("\nNum students with rankings: ", len(valuations))
+        print("Student names with rankings: ", list(valuations.keys()))
 
         agent_capacities = {sid(student_num): student_details["amount_elective"] for student_num,student_details in students_list.items()
             if student_num in rankings}
@@ -238,7 +267,7 @@ class CapData():
             cid(course_num):  {cid(conflicted_course_num) for conflicted_course_num in conflicted_courses}
             for course_num, conflicted_courses in overlap_courses.items()
         }
-        return (dict(valuations), agent_capacities, item_capacities, dict(agent_conflicts), item_conflicts, titles)
+        return (dict(valuations), agent_capacities, item_capacities, dict(agent_conflicts), item_conflicts, course_titles)
 
     
     def results_full_info(self, results: dict) -> tuple[dict,dict]:
@@ -285,40 +314,50 @@ class CapData():
     def write_input_to_json(self, filename:str):
         input = { }
         # input_tuple = cap_data.input_for_fair_allocation_algorithm()
-        (input["valuations"], input["agent_capacities"], input["item_capacities"], input["agent_conflicts"], input["item_conflicts"], _) = self.input_for_fair_allocation_algorithm(transliterate_hebrew=True, hide_studentid=True)
+        (input["valuations"], input["agent_capacities"], input["item_capacities"], input["agent_conflicts"], input["item_conflicts"], _) = \
+            self.input_for_fair_allocation_algorithm(transliterate_hebrew=True, hide_studentid=True)
+
         for agent in input["agent_conflicts"].keys():
             input["agent_conflicts"][agent] = list(input["agent_conflicts"][agent])
+
         for item in input["item_conflicts"].keys():
             input["item_conflicts"][item] = list(input["item_conflicts"][item])
+
+        agent_capacities = input["agent_capacities"].values()
+        print("sum capacities: ", sum(agent_capacities), "num capacity: ",  len(agent_capacities), "avg capacity: ", sum(agent_capacities)/len(agent_capacities), )
+
         with open(filename, "w", encoding="utf-8") as file:
             json.dump(input, file)
 
-
-if __name__=="__main__":
-    import codecs
-    office_id = '1'
-    cap_data = CapData(office_id)
+def print_results():
     results = {}
 
     students_list = cap_data.students_list()
+    ("date_joined > '2000-01-14'")
+    ("last_login > '2024-01-14'")
+    print("students_list: ",students_list, "\n")
+    print("students num: ",len(students_list), "\n")
+
     courses_list = cap_data.courses_list()
     course_times = cap_data.course_times_list()
     overlap_courses = cap_data.overlap_courses()
     rankings = cap_data.ranking_list()
     course_titles = cap_data.course_title_list()
-    # #results = cap_data.results_full_info(results)
-    # print('\nstudents_list:', students_list)
-    # print('\ncourses_list:', courses_list)
-    # print('\noverlap courses:', overlap_courses)
-    # print('\ncourse times:', course_times)
-    # print('\nrankings:', rankings)
-    # print('\ncourse_titles:', course_titles)
 
-    (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts,titles) = cap_data.input_for_fair_allocation_algorithm()
+    (valuations, agent_capacities, item_capacities, agent_conflicts, item_conflicts,titles) = \
+        cap_data.input_for_fair_allocation_algorithm()
+    
     print ("\n valuations = ", valuations)
     print ("\n agent_capacities = ", agent_capacities)
     print ("\n item_capacities = ", item_capacities)
     print ("\n agent_conflicts = ", agent_conflicts)
     print ("\n item_conflicts = ", item_conflicts)
 
+
+
+if __name__=="__main__":
+    import codecs, sys
+    office_id = '1'
+    cap_data = CapData(office_id)
+    cap_data.write_input_to_json("../files/input2.json")
     cap_data.close_mysql_connection()

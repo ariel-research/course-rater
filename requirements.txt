@@ -2,6 +2,6 @@ python-dotenv
 mysql-connector-python
 gspread
 pandas
-fairpy @ git+https://github.com/erelsgl/fairpy.git
+fairpyx >= 0.0.4
 experiments-csv[plotting]
 unidecode
