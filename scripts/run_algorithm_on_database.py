@@ -57,11 +57,11 @@ def experiment_random():
 
 def run_algorithm(instance, allocation_file):
     algorithm = fairpyx.algorithms.iterated_maximum_matching_adjusted
-    string_explanation_logger = fairpyx.StringsExplanationLogger(instance.agents)
+    # string_explanation_logger = fairpyx.StringsExplanationLogger(instance.agents)
     files_explanation_logger = fairpyx.FilesExplanationLogger({
         agent: f"../files/explanations/{agent}.log"
         for agent in instance.agents
-    },language='he', mode='w', encoding="utf-8")
+    },language='he', mode='w', encoding="utf-8", level=logging.INFO)
     
     allocation = fairpyx.divide(algorithm=algorithm, instance=instance, explanation_logger=files_explanation_logger)
 
@@ -92,15 +92,19 @@ if __name__ == '__main__':
         cap_data.input_for_fair_allocation_algorithm()
     total_seats_allocated = 1115
 
+    import random
+    item_weights = {key: random.randint(2,4) for key in item_capacities.keys()}
+
     # create a random sample from the input:
     instance = fairpyx.Instance.random_sample(
-        max_num_of_agents = total_seats_allocated, 
-        max_total_agent_capacity = 2000,
+        max_num_of_agents = total_seats_allocated,
+        max_total_agent_capacity = 5000,    # increase this number to increase competition
         prototype_agent_conflicts=agent_conflicts,
-        prototype_agent_capacities=agent_capacities, 
+        prototype_agent_capacities=agent_capacities,
         prototype_valuations=valuations,
         item_capacities=item_capacities,
-        item_conflicts=item_conflicts)
+        item_conflicts=item_conflicts,
+        item_weights=item_weights)
 
 
     # Run an experiment on the random sample, for comparing different algorithms:
@@ -109,7 +113,7 @@ if __name__ == '__main__':
     # compute the allocation for the random sample, and save to a file:
     allocation_file = '../files/allocation.json'
     run_algorithm(instance, allocation_file)
-    print("\n")         
+    print("\n")
 
     # write explanations for the computed allocation to files, and also to the database:
     with open(allocation_file, "r") as file:
